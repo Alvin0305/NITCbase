@@ -1,0 +1,203 @@
+{
+  "main": {
+    "id": "8f40a831b905946c",
+    "type": "split",
+    "children": [
+      {
+        "id": "cbd94b8055750247",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "600c015806bad762",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "NITCbase.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "NITCbase"
+            }
+          },
+          {
+            "id": "bbb179ac23aa692c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "System Design.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "System Design"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8827021bdca4ee28",
+    "type": "split",
+    "children": [
+      {
+        "id": "474d8c43b2c3cfe4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0182f31b7a1c6509",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "7ec97e4cf93d95e8",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "1cb8df11b1ba1185",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "991a29f0fc68a155",
+    "type": "split",
+    "children": [
+      {
+        "id": "0106e48d22dbbfe6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1a4b9964912e8899",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "NITCbase.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for NITCbase"
+            }
+          },
+          {
+            "id": "a79d631f5572f3e4",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "NITCbase.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from NITCbase"
+            }
+          },
+          {
+            "id": "ce4acd3b3f0439ec",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "6ac3c6ff7a835181",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "NITCbase.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of NITCbase"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "bbb179ac23aa692c",
+  "lastOpenFiles": [
+    "NITCbase.md",
+    "System Design.md",
+    "2025-07-28.md",
+    "Untitled.canvas",
+    "Pasted image 20250727201354.png",
+    "Untitled 1.canvas",
+    "create a link.md",
+    "Pasted image 20250727200647.png",
+    "Pasted image 20250727192514.png",
+    "Pasted image 20250727191116.png",
+    "Pasted image 20250727185020.png",
+    "Pasted image 20250727184152.png",
+    "Pasted image 20250727165446.png"
+  ]
+}
