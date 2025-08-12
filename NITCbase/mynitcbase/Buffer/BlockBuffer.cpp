@@ -5,23 +5,46 @@
 #include <iostream>
 
 int compareAttrs(Attribute attr1, Attribute attr2, int attrType){
-    int diff;
+    double diff;
     if (attrType == STRING) {
-        diff = strcmp(attr1.sVal, attr2.sVal);
+        return strcmp(attr1.sVal, attr2.sVal);
     } else {
-        diff = attr1.nVal - attr2.nVal;
+        if (attr1.nVal < attr2.nVal) {
+            return -1;
+        } else if (attr1.nVal > attr2.nVal) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
-
-    if (diff < 0) return -1;
-    if (diff > 0) return 1;
-    return 0;
 }
 
 BlockBuffer::BlockBuffer(int blockNum) {
     this->blockNum = blockNum;
 }
 
+// ======================== Stage 7 ======================
+// BlockBuffer::BlockBuffer(char blockTypeChar) {
+//     unsigned char *bufferPtr;
+//     int blockType = blockTypeChar == 'R' ? REC :
+//                     blockTypeChar == 'I' ? IND_INTERNAL :
+//                     blockTypeChar == 'L' ? IND_LEAF: UNUSED_BLK;
+
+//     int freeBlockNum = getFreeBlock(blockType);
+    
+//     if (freeBlockNum < 0 || blockNum >= DISK_BLOCKS) {
+//         std::cout << "Failed to get a free block" << std::endl;
+//         this->blockNum = freeBlockNum;
+//         return;
+//     } else {
+//         this->blockNum = freeBlockNum;
+//     }
+// }
+
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
+
+// ======================== Stage 7 ======================
+// RecBuffer::RecBuffer() : BlockBuffer::BlockBuffer('R') {}
 
 int BlockBuffer::getHeader(struct HeadInfo *head) {
 
@@ -42,32 +65,33 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
     memcpy(&head->lblock, bufferPtr + 8, 4);
     
     return SUCCESS;
-
-    // =============================
-    //          Stage 2
-    // =============================
-
-    
-    // unsigned char buffer[BLOCK_SIZE];
-    // Disk::readBlock(buffer, this->blockNum);
-
-    // memcpy(&head->blockType, buffer + 0, 4);
-    // memcpy(&head->pblock, buffer + 4, 4);
-    // memcpy(&head->lblock, buffer + 8, 4);
-    // memcpy(&head->rblock, buffer + 12, 4);
-    // memcpy(&head->numEntries, buffer + 16, 4);
-    // memcpy(&head->numAttrs, buffer + 20, 4);
-    // memcpy(&head->numSlots, buffer + 24, 4);
-
-    // memcpy(&head->numSlots, buffer + 24, 4);
-    // memcpy(&head->numEntries, buffer + 16, 4);
-    // memcpy(&head->numAttrs, buffer + 20, 4);
-    // memcpy(&head->rblock, buffer + 12, 4);
-    // memcpy(&head->lblock, buffer + 8, 4);
-
-    return SUCCESS;
-    
 }
+
+// int BlockBuffer::setHeader(struct HeadInfo *head) {
+//     unsigned char *bufferPtr;
+//     int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+//     if (ret != SUCCESS) {
+//         return ret;
+//     }
+
+//     struct HeadInfo *bufferHeader = (struct HeadInfo *) bufferPtr;
+
+//     bufferHeader->numSlots = head->numSlots;
+//     bufferHeader->blockType = head->blockType;
+//     bufferHeader->lblock = head->lblock;
+//     bufferHeader->numAttrs = head->numAttrs;
+//     bufferHeader->numEntries = head->numEntries;
+//     bufferHeader->pblock = head->pblock;
+//     bufferHeader->rblock = head->rblock;
+
+//     int ret_ = StaticBuffer::setDirtyBit(this->blockNum);
+//     if (ret_ != SUCCESS) {
+//         return ret_;
+//     }
+
+//     return SUCCESS;
+// }
 
 int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
 
@@ -92,30 +116,6 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
 
     memcpy(rec, slotPointer, recordSize);
     return SUCCESS;
-
-    //-----------------------------
-    //          Stage 2
-    // ----------------------------
-
-    // struct HeadInfo head;
-    // BlockBuffer::getHeader(&head);
-
-    // int attrCount = head.numAttrs;
-    // int slotCount = head.numSlots;
-
-    // if (slotNum < 0 || slotNum >= slotCount) {
-    //     return E_OUTOFBOUND;
-    // }
-
-    // unsigned char buffer[BLOCK_SIZE];
-    // Disk::readBlock(buffer, this->blockNum);
-
-    // int recordSize = attrCount * ATTR_SIZE;
-    // unsigned char *slotPointer = buffer + HEADER_SIZE + slotCount + slotNum * recordSize;
-
-    // memcpy(rec, slotPointer, recordSize);
-    // return SUCCESS;
-    
 }
 
 int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
@@ -140,13 +140,14 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
     unsigned char *slotPointer = buffer + HEADER_SIZE + slotCount + slotNum * recordSize;
 
     memcpy(slotPointer, rec, recordSize);
-    // Disk::writeBlock(buffer, this->blockNum);
+    Disk::writeBlock(buffer, this->blockNum);       // uncomment this for further stages
 
-    int ret_ = StaticBuffer::setDirtyBit(this->blockNum);
+    // ==================== Not stage 3 ============= 
+    // int ret_ = StaticBuffer::setDirtyBit(this->blockNum);
 
-    if (ret_ != SUCCESS) {
-        std::cout << "Failed to set dirty bit" << std::endl;
-    }
+    // if (ret_ != SUCCESS) {
+    //     std::cout << "Failed to set dirty bit" << std::endl;
+    // }
 
     return SUCCESS;
 }
@@ -166,15 +167,18 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **bufferPtr) {
         }
 
         Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
-    } else {
-        for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++) {
-            if (bufferIndex == bufferNum) {
-                StaticBuffer::metainfo[bufferIndex].timeStamp = 0;
-            } else {
-                StaticBuffer::metainfo[bufferIndex].timeStamp++;
-            }
-        }
-    }
+    } 
+    
+    // ======================== Stage 6 ======================
+    // else {
+    //     for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++) {
+    //         if (bufferIndex == bufferNum) {
+    //             StaticBuffer::metainfo[bufferIndex].timeStamp = 0;
+    //         } else {
+    //             StaticBuffer::metainfo[bufferIndex].timeStamp++;
+    //         }
+    //     }
+    // }
 
     *bufferPtr = StaticBuffer::blocks[bufferNum];
     
@@ -196,3 +200,30 @@ int RecBuffer::getSlotMap(unsigned char *slotMap) {
 
     return SUCCESS;
 }
+
+// ======================== Not Stage 4 ======================
+
+// ======================== Stage 7 ======================
+// int BlockBuffer::setBlockType(int blockType) {
+//     unsigned char *bufferPtr;
+//     int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+//     if (ret != SUCCESS) {
+//         return ret;
+//     }
+
+//     (*(int32_t *) bufferPtr) = blockType;
+    
+//     StaticBuffer::blockAllocMap[this->blockNum] = blockType;
+
+//     int ret_ = StaticBuffer::setDirtyBit(this->blockNum);
+//     if (ret_ != SUCCESS) {
+//         return ret_;
+//     }
+
+//     return SUCCESS;
+// }
+
+// ======================== Stage 7 ======================
+// int BlockBuffer::getFreeBlock(int blockType) {
+    // for (char blockAlloc = StaticBuffer::blockAllocMap[0]; blockAlloc)
+// }

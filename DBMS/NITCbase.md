@@ -361,3 +361,20 @@ In this stage we use the select method in Algebra.cpp to call the linearSearch m
 ## Opening Relations
 
 To use any DML command, we need the relation to be opened. Since at max 12 relations can be opened, out of which 2 are Relation Catalog and Attribute Catalog, we can only have 10 opened relations at a time. 
+
+## ***Stage 7***
+
+### Inserting into a Relation
+
+```C++
+BlockBuffer(char blockType);
+BlockBuffer(int blockNum);
+
+RecBuffer();
+RecBuffer(int blockNum);
+```
+
+Till now, we have been using the 2nd constructor for both BlockBuffer and RecBuffer. Now we need to implement the 1st constructor
+First constructor is needed when the below 2 conditions are met:
+- A record is added into a relation or when a relation is created resulting in a insertion in the relation catalog and attribute catalog
+- None of the already allocated blocks have a free slot to store the inserted record -> a new block should be allocated for insertion

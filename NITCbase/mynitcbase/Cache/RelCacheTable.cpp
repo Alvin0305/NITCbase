@@ -26,6 +26,9 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
     relCatEntry->numAttrs = (int) record[RELCAT_NO_ATTRIBUTES_INDEX].nVal;
     relCatEntry->numRecs = (int) record[RELCAT_NO_RECORDS_INDEX].nVal;
     relCatEntry->numSlotsPerBlk = (int) record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal;
+
+    // modification
+    relCatEntry->numOfBlks = (int) relCatEntry->lastBlk - (int) relCatEntry->firstBlk + 1;
 }
 
 int RelCacheTable::getSearchIndex(int relId, RecId *searchIndex) {
@@ -43,12 +46,10 @@ int RelCacheTable::getSearchIndex(int relId, RecId *searchIndex) {
 
 int RelCacheTable::setSearchIndex(int relId, RecId *searchIndex) {
     if (relId < 0 || relId >= MAX_OPEN) {
-        std::cout << "out of bound relid" << std::endl;
         return E_OUTOFBOUND;
     }
 
     if (RelCacheTable::relCache[relId] == nullptr) {
-        std::cout << "rel not open" << std::endl;
         return E_RELNOTOPEN;
     }
 

@@ -25,15 +25,6 @@ int AttrCacheTable::getAttrCatEntry(int relId, int attrOffset, AttrCatEntry *att
     return E_ATTRNOTEXIST;
 }
 
-void AttrCacheTable::recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTRS], AttrCatEntry *attrCatEntry) {
-    strcpy(attrCatEntry->attrName, record[ATTRCAT_ATTR_NAME_INDEX].sVal);
-    strcpy(attrCatEntry->relName, record[ATTRCAT_REL_NAME_INDEX].sVal);
-    attrCatEntry->attrType = (int) record[ATTRCAT_ATTR_TYPE_INDEX].nVal;
-    attrCatEntry->offset = (int) record[ATTRCAT_OFFSET_INDEX].nVal;
-    attrCatEntry->primaryFlag = (int) record[ATTRCAT_PRIMARY_FLAG_INDEX].nVal;
-    attrCatEntry->rootBlock = (int) record[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
-}
-
 int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuffer) {
     if (relId < 0 || relId >= MAX_OPEN) {
         return E_OUTOFBOUND;
@@ -51,6 +42,15 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
     }
 
     return E_ATTRNOTEXIST;
+}
+
+void AttrCacheTable::recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTRS], AttrCatEntry *attrCatEntry) {
+    strcpy(attrCatEntry->attrName, record[ATTRCAT_ATTR_NAME_INDEX].sVal);
+    strcpy(attrCatEntry->relName, record[ATTRCAT_REL_NAME_INDEX].sVal);
+    attrCatEntry->attrType = (int) record[ATTRCAT_ATTR_TYPE_INDEX].nVal;
+    attrCatEntry->offset = (int) record[ATTRCAT_OFFSET_INDEX].nVal;
+    attrCatEntry->primaryFlag = (int) record[ATTRCAT_PRIMARY_FLAG_INDEX].nVal;
+    attrCatEntry->rootBlock = (int) record[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
 }
 
 int AttrCacheTable::setSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex) {

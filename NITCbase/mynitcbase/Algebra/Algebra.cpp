@@ -58,6 +58,9 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
         printf(" %s |", attrCatEntry.attrName);
     }
+    if (strcmp(srcRel, RELCAT_RELNAME) == 0) {
+        printf(" %s |", "#Blocks");
+    }
     printf("\n");
 
     while (true) {
@@ -71,10 +74,16 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             printf("|");
             for (int attrIndex = 0; attrIndex < srcNoAttrs; attrIndex++) {
                 if (attrTypes[attrIndex] == NUMBER) {
-                    printf(" %d |", (int) attributes[attrIndex].nVal);
+                    printf(" %g |", attributes[attrIndex].nVal);
                 } else {
                     printf(" %s |", attributes[attrIndex].sVal);
                 }
+            }
+            if (strcmp(srcRel, RELCAT_RELNAME) == 0) {
+                int relID = OpenRelTable::getRelId(attributes[0].sVal);
+                RelCatEntry relCatEntry_;
+                RelCacheTable::getRelCatEntry(relID, &relCatEntry_);
+                printf(" %d |", relCatEntry_.numOfBlks);
             }
             printf("\n");
         } else {

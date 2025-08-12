@@ -86,7 +86,7 @@ void printBMAP(int n) {
 }
 
 void printRelCatAndAttrCatInCache() {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
       RelCatEntry relCatBuf;
       int result = RelCacheTable::getRelCatEntry(i, &relCatBuf);
       printf("Relation: %s\n", relCatBuf.relName);
@@ -101,6 +101,7 @@ void printRelCatAndAttrCatInCache() {
         printf("  %s: %s\n", attrName, attrType);
       }
       printf("\n");
+      // printf("%d\n", relCatBuf.numOfBlks);
     }
 }
 
@@ -110,9 +111,6 @@ int main(int argc, char *argv[]) {
   Disk disk_run;
   StaticBuffer buffer;
   OpenRelTable cache;
-
-  // StaticBuffer buffer;
-  // OpenRelTable cache;
 
   //--------------------------------------------
   //      Stage 1 -> First Implementation
@@ -215,8 +213,8 @@ int main(int argc, char *argv[]) {
   //--------------------------------------------
 
   // char relName[] = "Students";
-  // char attributeName[] = "Batch  ";
-  // char newAttributeName[] = "Class";
+  // char attributeName[] = "Class";
+  // char newAttributeName[] = "Batch";
   // updateSchema(relName, attributeName, newAttributeName);
 
   // printSchema();
@@ -226,7 +224,7 @@ int main(int argc, char *argv[]) {
   //--------------------------------------------
 
   printRelCatAndAttrCatInCache();
-  printSchema();
+  // printSchema();
 
   return FrontendInterface::handleFrontend(argc, argv);
 }
