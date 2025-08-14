@@ -12,7 +12,6 @@ typedef struct RelCatEntry {
   int firstBlk;
   int lastBlk;
   int numSlotsPerBlk;
-  int numOfBlks;
 
 } RelCatEntry;
 

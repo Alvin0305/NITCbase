@@ -1,0 +1,4 @@
+BasedOnStyle: Google
+BraceWrapping:
+  AfterControlStatement: Never
+ColumnLimit: 120
