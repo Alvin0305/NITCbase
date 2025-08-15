@@ -110,33 +110,21 @@ int Algebra::insert(char srcRel[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE]
 
   Attribute recordValues[nAttrs];
 
-  std::cout << "num of attrs are: " << nAttrs << std::endl;
-  std::cout << "Attribute values going to insert are: ";
-
   for (int i = 0; i < nAttrs; i++) {
     AttrCatEntry attrCatEntry;
-    int ret = AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to get attr cat entry 1" << std::endl;
-    }
+    AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
 
     int type = attrCatEntry.attrType;
     if (type == NUMBER) {
       if (isNumber(record[i])) {
         recordValues[i].nVal = atof(record[i]);
-        printf("%f -> %f ", atof(record[i]), recordValues[i].nVal);
       } else {
         return E_ATTRTYPEMISMATCH;
       }
     } else if (type == STRING) {
       strcpy(recordValues[i].sVal, record[i]);
-      printf("%s -> %s ", record[i], recordValues[i].sVal);
-    } else {
-      std::cout << "invalid type: " << type << std::endl;
     }
   }
-
-  std::cout << std::endl;
 
   return BlockAccess::insert(relId, recordValues);
 }

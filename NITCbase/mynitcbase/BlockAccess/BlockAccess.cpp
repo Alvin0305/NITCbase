@@ -162,10 +162,7 @@ int BlockAccess::renameAttribute(char relName[ATTR_SIZE], char oldAttrName[ATTR_
 // =========================== Stage 7 ==================================
 int BlockAccess::insert(int relId, Attribute *record) {
   RelCatEntry relCatEntry;
-  int ret = RelCacheTable::getRelCatEntry(relId, &relCatEntry);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to get rel cat entry 1" << std::endl;
-  }
+  RelCacheTable::getRelCatEntry(relId, &relCatEntry);
 
   int blockNum = relCatEntry.firstBlk;
 
@@ -178,20 +175,13 @@ int BlockAccess::insert(int relId, Attribute *record) {
     RecBuffer blockBuffer(blockNum);
 
     HeadInfo header;
-    ret = blockBuffer.getHeader(&header);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to get header 2" << std::endl;
-    }
+    blockBuffer.getHeader(&header);
 
     unsigned char slotMap[numOfSlots];
-    ret = blockBuffer.getSlotMap(slotMap);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to get slot map 3" << std::endl;
-    }
+    blockBuffer.getSlotMap(slotMap);
 
     for (int slotIndex = 0; slotIndex < numOfSlots; slotIndex++) {
       if (slotMap[slotIndex] == SLOT_UNOCCUPIED) {
-        std::cout << "GOT AN UNOCCUPIED SLOT" << std::endl;
         recId.block = blockNum;
         recId.slot = slotIndex;
         break;
@@ -199,14 +189,11 @@ int BlockAccess::insert(int relId, Attribute *record) {
     }
 
     if (recId.block == -1 && recId.slot == -1) {
-      std::cout << "block and slot are -1" << std::endl;
       break;
     }
     prevBlockNum = blockNum;
     blockNum = header.rblock;
   }
-
-  std::cout << "rec id got is: " << recId.block << " " << recId.slot << std::endl;
 
   if (recId.block == -1 && recId.slot == -1) {
     if (relId == RELCAT_RELID) return E_MAXRELATIONS;
@@ -227,84 +214,52 @@ int BlockAccess::insert(int relId, Attribute *record) {
     head.numAttrs = numOfAttributes;
     head.numSlots = numOfSlots;
 
-    ret = blockBuffer.setHeader(&head);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to set header 5" << std::endl;
-    }
+    blockBuffer.setHeader(&head);
 
     unsigned char slotMap[numOfSlots];
     for (int i = 0; i < numOfSlots; i++) {
       slotMap[i] = SLOT_UNOCCUPIED;
     }
-    ret = blockBuffer.setSlotMap(slotMap);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to set slot map 6" << std::endl;
-    }
+    blockBuffer.setSlotMap(slotMap);
 
     if (prevBlockNum != -1) {
       RecBuffer prevBlock(prevBlockNum);
       HeadInfo prevHead;
-      ret = prevBlock.getHeader(&prevHead);
-      if (ret != SUCCESS) {
-        std::cout << "Failed to get header 7" << std::endl;
-      }
+      prevBlock.getHeader(&prevHead);
+
       prevHead.rblock = blockNum;
-      ret = prevBlock.setHeader(&prevHead);
-      if (ret != SUCCESS) {
-        std::cout << "Failed to set header 8" << std::endl;
-      }
+      prevBlock.setHeader(&prevHead);
+
     } else {
       relCatEntry.firstBlk = recId.block;
 
-      ret = RelCacheTable::setRelCatEntry(relId, &relCatEntry);
-      if (ret != SUCCESS) {
-        std::cout << "Failed to set rel cat entry 9" << std::endl;
-      }
+      RelCacheTable::setRelCatEntry(relId, &relCatEntry);
     }
 
     relCatEntry.lastBlk = recId.block;
-    ret = RelCacheTable::setRelCatEntry(relId, &relCatEntry);
-    if (ret != SUCCESS) {
-      std::cout << "Failed to set rel cat entry 10" << std::endl;
-    }
+    RelCacheTable::setRelCatEntry(relId, &relCatEntry);
   }
 
-  std::cout << "after changing correction of rec id: " << recId.block << " " << recId.slot << std::endl;
-
   RecBuffer blockBuffer(recId.block);
-  ret = blockBuffer.setRecord(record, recId.slot);
+  int ret = blockBuffer.setRecord(record, recId.slot);
   if (ret != SUCCESS) {
-    std::cout << "Failed to set record 11" << std::endl;
     exit(FAILURE);
   }
 
   unsigned char slotMap[numOfSlots];
-  ret = blockBuffer.getSlotMap(slotMap);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to get slot map 12" << std::endl;
-  }
+  blockBuffer.getSlotMap(slotMap);
+
   slotMap[recId.slot] = SLOT_OCCUPIED;
-  ret = blockBuffer.setSlotMap(slotMap);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to set slot map 13" << std::endl;
-  }
+  blockBuffer.setSlotMap(slotMap);
 
   HeadInfo header;
-  ret = blockBuffer.getHeader(&header);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to get header 14" << std::endl;
-  }
+  blockBuffer.getHeader(&header);
+
   header.numEntries++;
-  ret = blockBuffer.setHeader(&header);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to set header 15" << std::endl;
-  }
+  blockBuffer.setHeader(&header);
 
   relCatEntry.numRecs++;
-  ret = RelCacheTable::setRelCatEntry(relId, &relCatEntry);
-  if (ret != SUCCESS) {
-    std::cout << "Failed to set rel cat entry 16" << std::endl;
-  }
+  RelCacheTable::setRelCatEntry(relId, &relCatEntry);
 
   return SUCCESS;
 }
