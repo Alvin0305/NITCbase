@@ -1,0 +1,39 @@
+echo ----------------------
+echo - Stage 9 : exercise 3
+echo ----------------------
+echo Creating Quiz Marks Table
+CREATE TABLE QuizMarks (rollNo STR, name STR, cgpa NUM, quizMarks NUM, location STR);
+echo Populating Quiz Marks Table
+OPEN TABLE QuizMarks;
+INSERT INTO QuizMarks VALUES FROM quizmarks.csv;
+echo Table Creation and insertion done
+echo
+echo Get all Students with CGPA greater than 8
+SELECT * FROM QuizMarks into EligibleByCG WHERE cgpa > 8;
+OPEN TABLE EligibleByCG;
+echo Selected students with CGPA greater than 8
+echo 
+echo Get all Students who are eligible for Scholarship : CGPA greater than 8 and QuizMarks greater than 85
+SELECT * FROM EligibleByCG into Eligible WHERE quizMarks > 85;
+OPEN TABLE Eligible;
+echo Selected Students who are eligible
+echo 
+echo Fetching Eligible Students in Kerala
+SELECT * FROM Eligible INTO Kerala WHERE location = Kerala;
+echo Selected Students who are eligible in Kerala
+echo 
+echo Fetching Eligible Students in Gujarat
+SELECT * FROM Eligible INTO Gujarat WHERE location = Gujarat;
+echo Selected Students who are eligible in Gujarat
+echo 
+echo Fetching Eligible Students in Telangana
+SELECT * FROM Eligible INTO Telangana WHERE location = Telangana;
+echo Selected Students who are eligible in Telangana
+echo 
+echo Deleting Temporary Tables
+CLOSE TABLE EligibleByCG;
+CLOSE TABLE Eligible;
+DROP TABLE EligibleByCG;
+DROP TABLE Eligible;
+echo DONE
+echo ------------------------

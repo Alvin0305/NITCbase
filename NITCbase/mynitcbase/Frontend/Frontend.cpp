@@ -37,14 +37,12 @@ int Frontend::insert_into_table_values(char relname[ATTR_SIZE], int attr_count, 
 }
 
 int Frontend::select_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE]) {
-  // Algebra::project
-  return SUCCESS;
+  return Algebra::project(relname_source, relname_target);
 }
 
 int Frontend::select_attrlist_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE], int attr_count,
                                          char attr_list[][ATTR_SIZE]) {
-  // Algebra::project
-  return SUCCESS;
+  return Algebra::project(relname_source, relname_target, attr_count, attr_list);
 }
 
 int Frontend::select_from_table_where(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],
@@ -55,8 +53,30 @@ int Frontend::select_from_table_where(char relname_source[ATTR_SIZE], char relna
 int Frontend::select_attrlist_from_table_where(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],
                                                int attr_count, char attr_list[][ATTR_SIZE], char attribute[ATTR_SIZE],
                                                int op, char value[ATTR_SIZE]) {
-  // Algebra::select + Algebra::project??
-  return SUCCESS;
+  char tempRelName[ATTR_SIZE] = TEMP;
+  // select all the records stisfying the condition into a temp relation
+  int ret = Algebra::select(relname_source, tempRelName, attribute, op, value);
+  if (ret != SUCCESS) {
+    return ret;
+  }
+  std::cout << "Selected from " << relname_source << " to " << tempRelName << std::endl;
+
+  // open the temp relation
+  int tempRelId = OpenRelTable::openRel(tempRelName);
+  if (tempRelId < 0 or tempRelId >= MAX_OPEN) {
+    Schema::deleteRel(tempRelName);
+    return tempRelId;
+  }
+
+  std::cout << "Opened " << tempRelId << " -> " << tempRelName << std::endl;
+
+  // project the required attributes from the temp relation
+  ret = Algebra::project(tempRelName, relname_target, attr_count, attr_list);
+  std::cout << "Projected to " << relname_target << " from " << tempRelName << std::endl;
+  OpenRelTable::closeRel(tempRelId);
+  Schema::deleteRel(tempRelName);
+
+  return ret;
 }
 
 int Frontend::select_from_join_where(char relname_source_one[ATTR_SIZE], char relname_source_two[ATTR_SIZE],
