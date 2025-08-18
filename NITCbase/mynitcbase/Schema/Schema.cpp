@@ -56,7 +56,7 @@ int Schema::createRel(char relName[], int nAttrs, char attrs[][ATTR_SIZE], int a
   Attribute relNameAsAttribute;
   strcpy(relNameAsAttribute.sVal, relName);
 
-  RecId targetRelId;
+  RecId targetRelId = {-1, -1};
 
   RelCacheTable::resetSearchIndex(RELCAT_RELID);
   char relCatAttrRelName[ATTR_SIZE] = RELCAT_ATTR_RELNAME;
@@ -83,7 +83,7 @@ int Schema::createRel(char relName[], int nAttrs, char attrs[][ATTR_SIZE], int a
   relCatRecord[RELCAT_NO_RECORDS_INDEX].nVal = 0;
   relCatRecord[RELCAT_FIRST_BLOCK_INDEX].nVal = -1;
   relCatRecord[RELCAT_LAST_BLOCK_INDEX].nVal = -1;
-  relCatRecord[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal = floor(2016 / (16 * nAttrs + 1));
+  relCatRecord[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal = floor((2016 * 1.00) / (16 * nAttrs + 1));
 
   // puts the created relation catalog entry in relation catalog
   int retVal = BlockAccess::insert(RELCAT_RELID, relCatRecord);

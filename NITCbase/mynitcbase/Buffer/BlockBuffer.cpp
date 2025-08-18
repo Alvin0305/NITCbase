@@ -50,11 +50,13 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
   int ret = BlockBuffer::loadBlockAndGetBufferPtr(&bufferPtr);
   if (ret != SUCCESS) return ret;
 
-  memcpy(&head->numSlots, bufferPtr + 24, 4);
+  memcpy(&head->blockType, bufferPtr + 0, 4);
+  memcpy(&head->pblock, bufferPtr + 4, 4);
+  memcpy(&head->lblock, bufferPtr + 8, 4);
+  memcpy(&head->rblock, bufferPtr + 12, 4);
   memcpy(&head->numEntries, bufferPtr + 16, 4);
   memcpy(&head->numAttrs, bufferPtr + 20, 4);
-  memcpy(&head->rblock, bufferPtr + 12, 4);
-  memcpy(&head->lblock, bufferPtr + 8, 4);
+  memcpy(&head->numSlots, bufferPtr + 24, 4);
 
   return SUCCESS;
 }
@@ -244,15 +246,15 @@ int BlockBuffer::getFreeBlock(int blockType) {
 }
 
 void BlockBuffer::releaseBlock() {
-  if (blockNum == INVALID_BLOCKNUM) {
+  if (blockNum == INVALID_BLOCKNUM || StaticBuffer::blockAllocMap[this->blockNum] == UNUSED_BLK) {
     return;
   }
 
   int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
-  if (bufferNum != E_BLOCKNOTINBUFFER) {
+  if (bufferNum >= 0 and bufferNum < BUFFER_CAPACITY) {
     StaticBuffer::metainfo[bufferNum].free = true;
-    StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
-
-    this->blockNum = INVALID_BLOCKNUM;
   }
+
+  StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+  this->blockNum = INVALID_BLOCKNUM;
 }

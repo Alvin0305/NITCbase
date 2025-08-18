@@ -280,7 +280,6 @@ int OpenRelTable::closeRel(int relId) {
     RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry), record);
 
     RecId recId = RelCacheTable::relCache[relId]->recId;
-    printf("%d %d\n", recId.block, recId.slot);
 
     RecBuffer relCatBlock(recId.block);
     int ret = relCatBlock.setRecord(record, recId.slot);
