@@ -52,6 +52,8 @@ int Schema::renameAttr(char relName[ATTR_SIZE], char oldAttrName[ATTR_SIZE], cha
   return BlockAccess::renameAttribute(relName, oldAttrName, newAttrName);
 }
 
+// ============================== Stage 8 =============================
+// create a new relation
 int Schema::createRel(char relName[], int nAttrs, char attrs[][ATTR_SIZE], int attrType[]) {
   Attribute relNameAsAttribute;
   strcpy(relNameAsAttribute.sVal, relName);
@@ -112,6 +114,8 @@ int Schema::createRel(char relName[], int nAttrs, char attrs[][ATTR_SIZE], int a
   return SUCCESS;
 }
 
+// ============================== Stage 8 =============================
+// drop a relation
 int Schema::deleteRel(char relName[]) {
   // RELATIONCAT and ATTRIBUTECAT cannot be deleted
   if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0) {

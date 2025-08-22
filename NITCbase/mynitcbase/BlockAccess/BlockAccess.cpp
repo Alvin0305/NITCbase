@@ -160,6 +160,7 @@ int BlockAccess::renameAttribute(char relName[ATTR_SIZE], char oldAttrName[ATTR_
 }
 
 // =========================== Stage 7 ==================================
+// insert a record into a relation
 int BlockAccess::insert(int relId, Attribute *record) {
   RelCatEntry relCatEntry;
   RelCacheTable::getRelCatEntry(relId, &relCatEntry);
@@ -171,6 +172,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
   int numOfAttributes = relCatEntry.numAttrs;
   int prevBlockNum = -1;
 
+  // find the block and slot which is free for insertion
   while (blockNum != -1) {
     RecBuffer blockBuffer(blockNum);
 
@@ -180,6 +182,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
     unsigned char slotMap[numOfSlots];
     blockBuffer.getSlotMap(slotMap);
 
+    // loops through the slot map and find a free slot
     for (int slotIndex = 0; slotIndex < numOfSlots; slotIndex++) {
       if (slotMap[slotIndex] == SLOT_UNOCCUPIED) {
         recId.block = blockNum;
@@ -191,13 +194,19 @@ int BlockAccess::insert(int relId, Attribute *record) {
     if (recId.block != -1) {
       break;
     }
+
+    // go to next block
     prevBlockNum = blockNum;
     blockNum = header.rblock;
   }
 
+  // there is no free slots in any of the blocks allocated for the relation
+  // => we need to allocate a new block for the relation
   if (recId.block == -1 && recId.slot == -1) {
+    // RELCAT can span only one block => 20 slots
     if (relId == RELCAT_RELID) return E_MAXRELATIONS;
 
+    // allocate a new free block
     RecBuffer blockBuffer;
     int blockNum = blockBuffer.getBlockNum();
     if (blockNum == E_DISKFULL) return E_DISKFULL;
@@ -205,6 +214,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
     recId.block = blockNum;
     recId.slot = 0;
 
+    // create a header for the new block
     HeadInfo head;
     head.blockType = REC;
     head.pblock = -1;
@@ -216,6 +226,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
 
     blockBuffer.setHeader(&head);
 
+    // mark all the slots as SLOT_UNOCCUPIED
     unsigned char slotMap[numOfSlots];
     for (int i = 0; i < numOfSlots; i++) {
       slotMap[i] = SLOT_UNOCCUPIED;
@@ -223,23 +234,25 @@ int BlockAccess::insert(int relId, Attribute *record) {
     blockBuffer.setSlotMap(slotMap);
 
     if (prevBlockNum != -1) {
+      // update the linked list of block (r block of prevBlock points to the current block)
       RecBuffer prevBlock(prevBlockNum);
       HeadInfo prevHead;
       prevBlock.getHeader(&prevHead);
 
       prevHead.rblock = blockNum;
       prevBlock.setHeader(&prevHead);
-
     } else {
+      // this is the first block of the particular relation
       relCatEntry.firstBlk = recId.block;
-
       RelCacheTable::setRelCatEntry(relId, &relCatEntry);
     }
 
+    // since there was no space in between => this was the last block of that particular relation
     relCatEntry.lastBlk = recId.block;
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
   }
 
+  // insert the record into the slot
   RecBuffer blockBuffer(recId.block);
   int ret = blockBuffer.setRecord(record, recId.slot);
   if (ret != SUCCESS) {
@@ -249,15 +262,18 @@ int BlockAccess::insert(int relId, Attribute *record) {
   unsigned char slotMap[numOfSlots];
   blockBuffer.getSlotMap(slotMap);
 
+  // update the slotmap
   slotMap[recId.slot] = SLOT_OCCUPIED;
   blockBuffer.setSlotMap(slotMap);
 
   HeadInfo header;
   blockBuffer.getHeader(&header);
 
+  // increment the number of entries in the block and set the header
   header.numEntries++;
   blockBuffer.setHeader(&header);
 
+  // increment the number of records in the relCatEntry in relCache
   relCatEntry.numRecs++;
   RelCacheTable::setRelCatEntry(relId, &relCatEntry);
 
@@ -276,6 +292,8 @@ int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], 
   return block.getRecord(record, recId.slot);
 }
 
+// ============================== Stage 8 =============================
+// drop a relation
 int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
   // user is not allowed to delete RELAIONCAT and ATTRIBUTECAT
   if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0) {
@@ -321,6 +339,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
   RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &attrCatEntry);
   int correctNumSlotsForAttrCat = attrCatEntry.numSlotsPerBlk;
 
+  // delete all the attributes of the relation from the attribute catalog block
   while (true) {
     char relcatRelName[ATTR_SIZE] = RELCAT_ATTR_RELNAME;
     RecId attrCatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, relcatRelName, relNameAttr, EQ);
@@ -357,6 +376,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
       int lBlockNum = attrCatHeader.lblock;
       int rBlockNum = attrCatHeader.rblock;
 
+      // if left block is not -1, to update the linked list, leftHeader.rblock = currentBlock.rblock
+      // if left block num is -1, this is the first block of the relation
       if (lBlockNum != -1) {
         RecBuffer prevBlock(lBlockNum);
         HeadInfo prevHeader;
@@ -367,6 +388,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
         attrCatEntry.firstBlk = rBlockNum;
       }
 
+      // if right block is not -1, to update the linked list, rightHeader.lblock = currentBlock.lblock
+      // if right block is -1, this is the last block of the relation
       if (rBlockNum != -1) {
         RecBuffer nextBlock(rBlockNum);
         HeadInfo nextHeader;
@@ -416,6 +439,8 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
   return SUCCESS;
 }
 
+// ============================= Stage 9 =============================
+// project given set of attributes of a relation
 int BlockAccess::project(int relId, Attribute *record) {
   // get the last hit block and slot -> search index
   RecId prevSearchIndex;
@@ -431,11 +456,14 @@ int BlockAccess::project(int relId, Attribute *record) {
     block = relCatEntry.firstBlk;
     slot = 0;
   } else {
-    // a project operation is done already
+    // a project operation is done already -> start from next slot
     block = prevSearchIndex.block;
     slot = prevSearchIndex.slot + 1;
   }
 
+  // loop until we get a satisfying slot i.e.,
+  //    if this is the last slot, go to next block
+  //    if the slot is unoccupied move to next slot
   while (block != -1) {
     RecBuffer currentBlock(block);
 

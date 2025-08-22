@@ -121,6 +121,8 @@ OpenRelTable::~OpenRelTable() {
     }
   }
 
+  // ============================== Stage 8 =============================
+  // mark the dirty attrCacheEntries as dirty in StaticBuffer so that it will get written back to disk on ~StaticBuffer
   if (RelCacheTable::relCache[ATTRCAT_RELID]->dirty == true) {
     RelCatEntry relCatEntry;
     RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &relCatEntry);
@@ -133,6 +135,8 @@ OpenRelTable::~OpenRelTable() {
     relCatBlock.setRecord(relCatRecord, recId.slot);
   }
 
+  // ============================== Stage 8 =============================
+  // mark the dirty attrCacheEntries as dirty in StaticBuffer so that it will get written back to disk on ~StaticBuffer
   if (RelCacheTable::relCache[RELCAT_RELID]->dirty == true) {
     RelCatEntry relCatEntry;
     RelCacheTable::getRelCatEntry(RELCAT_RELID, &relCatEntry);
@@ -275,6 +279,7 @@ int OpenRelTable::closeRel(int relId) {
   if (AttrCacheTable::attrCache[relId] == nullptr) return E_RELNOTOPEN;
 
   // ======================== Stage 7 ==============================
+  // if the relCacheEntry is dirty, set the record (write back)
   if (RelCacheTable::relCache[relId]->dirty == true) {
     Attribute record[RELCAT_NO_ATTRS];
     RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry), record);

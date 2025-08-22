@@ -21,6 +21,7 @@ int compareAttrs(Attribute attr1, Attribute attr2, int attrType) {
 BlockBuffer::BlockBuffer(int blockNum) { this->blockNum = blockNum; }
 
 // ======================== Stage 7 ======================
+// used in the constructor of RecBuffer without arguments (for creating a record buffer of a free block)
 BlockBuffer::BlockBuffer(char blockTypeChar) {
   unsigned char *bufferPtr;
   int blockType = blockTypeChar == 'R'   ? REC
@@ -41,8 +42,11 @@ BlockBuffer::BlockBuffer(char blockTypeChar) {
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
 
 // ======================== Stage 7 ======================
+// used to create a Record Buffer of a free block using the BlockBuffer constructor
 RecBuffer::RecBuffer() : BlockBuffer::BlockBuffer('R') {}
 
+// ======================== Stage 7 ======================
+// return the blockNum
 int BlockBuffer::getBlockNum() { return this->blockNum; }
 
 int BlockBuffer::getHeader(struct HeadInfo *head) {
@@ -62,6 +66,7 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
 }
 
 // ======================== Stage 7 ===========================
+// updated the header and sets the dirty bit
 int BlockBuffer::setHeader(struct HeadInfo *head) {
   unsigned char *bufferPtr;
   int ret = loadBlockAndGetBufferPtr(&bufferPtr);
@@ -169,6 +174,8 @@ int RecBuffer::getSlotMap(unsigned char *slotMap) {
   return SUCCESS;
 }
 
+// ============================ Stage 7 ==========================
+// update the slot map and set the dirty bit
 int RecBuffer::setSlotMap(unsigned char *slotMap) {
   unsigned char *bufferPtr;
   int result = BlockBuffer::loadBlockAndGetBufferPtr(&bufferPtr);
@@ -191,6 +198,7 @@ int RecBuffer::setSlotMap(unsigned char *slotMap) {
 }
 
 // ======================== Stage 7 ======================
+// updates the block type and sets the dirty bit
 int BlockBuffer::setBlockType(int blockType) {
   unsigned char *bufferPtr;
   int ret = loadBlockAndGetBufferPtr(&bufferPtr);
@@ -211,6 +219,7 @@ int BlockBuffer::setBlockType(int blockType) {
 }
 
 // ======================== Stage 7 ======================
+// get a free block based on the block allocation map in StaticBuffer
 int BlockBuffer::getFreeBlock(int blockType) {
   int blockNum;
   for (blockNum = 0; blockNum < DISK_BLOCKS; blockNum++) {
@@ -245,6 +254,8 @@ int BlockBuffer::getFreeBlock(int blockType) {
   return blockNum;
 }
 
+// ============================== Stage 8 =============================
+// set StaticBuffer::metainfo[blockNum].free = true and StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK
 void BlockBuffer::releaseBlock() {
   if (blockNum == INVALID_BLOCKNUM || StaticBuffer::blockAllocMap[this->blockNum] == UNUSED_BLK) {
     return;

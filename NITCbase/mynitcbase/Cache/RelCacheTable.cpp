@@ -20,6 +20,7 @@ int RelCacheTable::getRelCatEntry(int relId, RelCatEntry *relCatBuf) {
 }
 
 // ======================== Stage 7 ==============================
+// updates the relcatEntry and sets the dirty bit
 int RelCacheTable::setRelCatEntry(int relId, RelCatEntry *relCatBuf) {
   if (relId < 0 || relId >= MAX_OPEN) {
     return E_OUTOFBOUND;
@@ -45,6 +46,7 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
 }
 
 // ========================Stage 7 ==============================
+// converts the relcatEntry to a record and returns it
 void RelCacheTable::relCatEntryToRecord(RelCatEntry *relCatEntry, union Attribute record[RELCAT_NO_ATTRS]) {
   strcpy(record[RELCAT_REL_NAME_INDEX].sVal, relCatEntry->relName);
   record[RELCAT_FIRST_BLOCK_INDEX].nVal = (int)relCatEntry->firstBlk;
