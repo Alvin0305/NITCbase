@@ -1,0 +1,3 @@
+drop table BigNumbers;
+open table Numbers;
+select * from Numbers into BigNumbers where key > 165000;

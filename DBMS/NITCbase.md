@@ -378,3 +378,80 @@ Till now, we have been using the 2nd constructor for both BlockBuffer and RecBuf
 First constructor is needed when the below 2 conditions are met:
 - A record is added into a relation or when a relation is created resulting in a insertion in the relation catalog and attribute catalog
 - None of the already allocated blocks have a free slot to store the inserted record -> a new block should be allocated for insertion
+
+## ***Stage 10***
+
+### B Plus Tree
+- Order of a tree is the maximum number of children that a node in the tree can have
+- For a tree of order m, each node can have at most m - 1 entries.
+- Entries in each node are sorted
+	- All entries in the left sub tree will have a key less than the parent's key value
+	- All entries in the right sub tree will have a key greater than the parent's key value
+- Each node in the tree is a list of pairs containing an attribute value and a pointer to the record that contains the particular record
+
+#### B Trees
+- Two kinds of nodes
+	- Leaf node
+	- Internal node
+- Every internal node has at most m children
+- A internal node with k children have k - 1 entries
+- Each entry in an internal node has
+	- left child pointer
+	- key value
+	- record pointer
+	- right child pointer
+- the key value will be greater that those of all the elements in it's left child and is lesser than those of all entries in its right child.
+- All leaf nodes are at the same level
+- When a node is full -> It splits them into two such that each is at least have full
+- The root has at least 2 children if it is not a leaf node
+
+Disadvantage
+- Since the record pointer is stored within the index blocks, this reduce the number of entries that can be stored in a index block which results in increasing the height of the entire tree
+
+#### B+ Tree
+- Two kinds of nodes
+	- Leaf Node
+		- key value
+		- record pointer
+	- Internal node
+		- left child pointer
+		- key value
+		- right child pointer
+- record pointers are stored only in the leaf nodes not in the internal index nodes
+- When a leaf node becomes full and is split -> the middle entry is stored in both the leaf and parent node (Different from B Tree)
+- When a internal node becomes full and is split -> the middle entry is stored only in the parent node (Same as B Tree)
+- So, all the leaves appear in the same level and all the keys appear in the leaves
+- The leaf nodes maintain a sorted linked list order. This helps in faster range queries. Only the traversal of the leaves are needed, but in B trees a traversal through all the layers is needed
+
+##### **Searching in B+ Tree**
+- Start from root
+- Compare "k" with each keys in the root node until we get an entry with key > k
+	- If we get such a entry, we move to the left child
+	- else we go to the right most child of the node
+- Keep doing this until we reach a leaf node
+	- Do a linear search on the leaf node to find our key and the corresponding value
+
+##### **Insertion in B+ Tree**
+- Traverse down the tree using the previous search algorithm to find the leaf node for insertion
+- If the leaf is not full, add the entry
+- else, split the leaf
+	- allocate a new leaf and add half of the elements of the current leaf node to the new leaf node
+	- insert a copy of the current leaf node's largest key  (i.e., middle before split) into the parent
+	- If parent is full, split it too. Add the middle key to its parent node
+	- Repeat until a parent is found that need not be split
+		- If the root has to be split, then a new node is created and the middle key is added to it. This new node becomes the new root node
+
+### Indexing
+
+- Internal Index block contains 100 entries -> 101 child pointers
+- Each entry in leaf node is a 3 tuple -> 16B attribute value, 4B block number, 4B slot number and 8B unused space => 32B (There is total 63 entries in a leaf block)
+- 
+
+### Internal Index Block
+
+![[Pasted image 20250825212359.png]]
+### Leaf Index Block Structure
+
+![[Pasted image 20250825212410.png]]
+
+

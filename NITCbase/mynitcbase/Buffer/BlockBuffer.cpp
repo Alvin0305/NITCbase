@@ -6,15 +6,18 @@
 
 int compareAttrs(Attribute attr1, Attribute attr2, int attrType) {
   double diff;
-  if (attrType == STRING)
-    return strcmp(attr1.sVal, attr2.sVal);
-  else {
-    if (attr1.nVal < attr2.nVal)
-      return -1;
-    else if (attr1.nVal > attr2.nVal)
-      return 1;
-    else
-      return 0;
+  if (attrType == STRING) {
+    diff = strcmp(attr1.sVal, attr2.sVal);
+  } else {
+    diff = attr1.nVal - attr2.nVal;
+  }
+
+  if (diff > 0) {
+    return 1;
+  } else if (diff < 0) {
+    return -1;
+  } else {
+    return 0;
   }
 }
 
@@ -29,14 +32,18 @@ BlockBuffer::BlockBuffer(char blockTypeChar) {
                   : blockTypeChar == 'L' ? IND_LEAF
                                          : UNUSED_BLK;
 
+  if (blockType == UNUSED_BLK) {
+    printf("Invalid block type\n");
+    return;
+  }
+
   int freeBlockNum = getFreeBlock(blockType);
 
-  if (freeBlockNum < 0 || blockNum >= DISK_BLOCKS) {
+  if (freeBlockNum < 0 or blockNum >= DISK_BLOCKS) {
     std::cout << "Failed to get a free block" << std::endl;
-    this->blockNum = freeBlockNum;
-  } else {
-    this->blockNum = freeBlockNum;
+    exit(FAILURE);
   }
+  this->blockNum = freeBlockNum;
 }
 
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
@@ -45,8 +52,16 @@ RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
 // used to create a Record Buffer of a free block using the BlockBuffer constructor
 RecBuffer::RecBuffer() : BlockBuffer::BlockBuffer('R') {}
 
-// ======================== Stage 7 ======================
-// return the blockNum
+// ======================= Stage 10 =======================
+IndBuffer::IndBuffer(char blockType) : BlockBuffer::BlockBuffer(blockType) {}
+IndBuffer::IndBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
+
+IndInternal::IndInternal() : IndBuffer::IndBuffer('I') {}
+IndInternal::IndInternal(int blockNum) : IndBuffer::IndBuffer(blockNum) {}
+
+IndLeaf::IndLeaf() : IndBuffer::IndBuffer('L') {}
+IndLeaf::IndLeaf(int blockNum) : IndBuffer::IndBuffer(blockNum) {}
+
 int BlockBuffer::getBlockNum() { return this->blockNum; }
 
 int BlockBuffer::getHeader(struct HeadInfo *head) {
@@ -269,3 +284,62 @@ void BlockBuffer::releaseBlock() {
   StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
   this->blockNum = INVALID_BLOCKNUM;
 }
+
+// ======================= Stage 10 =======================
+// task is to convert the given ptr to InternalEntry and put the index entry into it
+int IndInternal::getEntry(void *ptr, int indexNum) {
+  if (indexNum < 0 or indexNum >= MAX_KEYS_INTERNAL) {
+    return E_OUTOFBOUND;
+  }
+
+  unsigned char *bufferPtr;
+  int ret = BlockBuffer::loadBlockAndGetBufferPtr(&bufferPtr);
+
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
+  struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+
+  // size of an entry is 20 because an Index Internal Block Entry contains
+  // child pointer and attribute taking 4B and 16B respectively
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+
+  // lChild = child pointer of current entry => entryPtr + 0 :: size = 4 = sizeof(int32_t)
+  // attrVal = attribute value of current entry => entryPtr + sizeof(child pointer) :: size = 16 = sizeof(Attribute)
+  // rChild = child pointer of next entry => entryPtr + sizeof(child pointer + attribute) :: size = 4 =
+  // sizeof(int32_t)
+  memcpy(&(internalEntry->lChild), entryPtr, sizeof(int32_t));
+  memcpy(&(internalEntry->attrVal), entryPtr + sizeof(int32_t), sizeof(Attribute));
+  memcpy(&(internalEntry->rChild), entryPtr + sizeof(int32_t) + sizeof(Attribute), sizeof(int32_t));
+
+  return SUCCESS;
+}
+
+// ======================= Stage 10 =======================
+// task is to convert the given ptr to Index and put the leaf index entry into it
+int IndLeaf::getEntry(void *ptr, int indexNum) {
+  if (indexNum < 0 or indexNum >= MAX_KEYS_LEAF) {
+    return E_OUTOFBOUND;
+  }
+
+  unsigned char *bufferPtr;
+  int ret = BlockBuffer::loadBlockAndGetBufferPtr(&bufferPtr);
+
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+  memcpy((struct Index *)ptr, entryPtr, LEAF_ENTRY_SIZE);
+
+  return SUCCESS;
+}
+
+// ======================= Stage 10 =======================
+// defined just to escape compilation errors. Will be implemented in Stage 11
+int IndInternal::setEntry(void *ptr, int indexNum) { return 0; }
+
+// ======================= Stage 10 =======================
+// defined just to escape compilation errors. Will be implemented in Stage 11
+int IndLeaf::setEntry(void *ptr, int indexNum) { return 0; }

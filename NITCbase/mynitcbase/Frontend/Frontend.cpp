@@ -59,8 +59,6 @@ int Frontend::select_attrlist_from_table_where(char relname_source[ATTR_SIZE], c
   if (ret != SUCCESS) {
     return ret;
   }
-  std::cout << "Selected from " << relname_source << " to " << tempRelName << std::endl;
-
   // open the temp relation
   int tempRelId = OpenRelTable::openRel(tempRelName);
   if (tempRelId < 0 or tempRelId >= MAX_OPEN) {
@@ -68,11 +66,8 @@ int Frontend::select_attrlist_from_table_where(char relname_source[ATTR_SIZE], c
     return tempRelId;
   }
 
-  std::cout << "Opened " << tempRelId << " -> " << tempRelName << std::endl;
-
   // project the required attributes from the temp relation
   ret = Algebra::project(tempRelName, relname_target, attr_count, attr_list);
-  std::cout << "Projected to " << relname_target << " from " << tempRelName << std::endl;
   OpenRelTable::closeRel(tempRelId);
   Schema::deleteRel(tempRelName);
 

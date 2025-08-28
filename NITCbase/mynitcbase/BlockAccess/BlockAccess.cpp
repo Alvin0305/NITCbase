@@ -280,11 +280,28 @@ int BlockAccess::insert(int relId, Attribute *record) {
   return SUCCESS;
 }
 
+// ======================= Stage 10 =======================
+// if the attribute is indexed, uses bplusTreeSearch other wise use linear search to find a record
 int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
   RecId recId;
 
-  recId = BlockAccess::linearSearch(relId, attrName, attrVal, op);
-  if (recId.block == -1 or recId.slot == -1) {
+  AttrCatEntry attrCatEntry;
+  int ret = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
+  int rootBlock = attrCatEntry.rootBlock;
+  // check if the attribute is indexed
+  //    if the attribute is not indexed, its root block will be -1 => linear search
+  //    if the attribute is indexed, its root block will be -1 => b plus search
+  if (rootBlock == -1) {
+    recId = BlockAccess::linearSearch(relId, attrName, attrVal, op);
+  } else {
+    recId = BPlusTree::bPlusSearch(relId, attrName, attrVal, op);
+  }
+
+  if (recId.block == -1 and recId.slot == -1) {
     return E_NOTFOUND;
   }
 

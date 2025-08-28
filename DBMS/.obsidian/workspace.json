@@ -176,6 +176,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:Create new base": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -186,6 +187,8 @@
   },
   "active": "bbb179ac23aa692c",
   "lastOpenFiles": [
+    "Pasted image 20250825212410.png",
+    "Pasted image 20250825212359.png",
     "System Design.md",
     "NITCbase.md",
     "2025-07-28.md",
