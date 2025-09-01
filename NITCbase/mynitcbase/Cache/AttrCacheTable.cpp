@@ -56,6 +56,7 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
   }
 
   for (AttrCacheEntry *entry = AttrCacheTable::attrCache[relId]; entry != nullptr; entry = entry->next) {
+    // printf("%d comparing %s with %s\n", relId, entry->attrCatEntry.attrName, attrName);
     if (strcmp(entry->attrCatEntry.attrName, attrName) == 0) {
       *attrCatBuffer = entry->attrCatEntry;
       return SUCCESS;

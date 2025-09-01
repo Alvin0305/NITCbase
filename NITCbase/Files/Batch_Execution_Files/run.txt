@@ -1,0 +1,3 @@
+open table Events;
+open table Locations;
+select name from Events join Locations into EventLocations where Events.location = Locations.name;
