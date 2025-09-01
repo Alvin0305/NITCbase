@@ -86,6 +86,7 @@ int Frontend::select_attrlist_from_join_where(char relname_source_one[ATTR_SIZE]
   char tempRelName[ATTR_SIZE] = TEMP;
   int ret = Algebra::join(relname_source_one, relname_source_two, tempRelName, join_attr_one, join_attr_two);
   if (ret != SUCCESS) {
+    printf("join failed: %d\n", ret);
     return ret;
   }
 
@@ -101,6 +102,7 @@ int Frontend::select_attrlist_from_join_where(char relname_source_one[ATTR_SIZE]
   OpenRelTable::closeRel(tempRelId);
   Schema::deleteRel(tempRelName);
 
+  printf("%d\n", ret);
   return ret;
 }
 

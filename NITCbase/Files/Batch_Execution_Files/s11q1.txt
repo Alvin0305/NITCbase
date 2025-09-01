@@ -1,0 +1,13 @@
+create table Events(id NUM, title STR, location STR);
+create table Locations(name STR, capacity NUM);
+create table Participants(regNo NUM, event STR);
+open table Events;
+insert into Events values from events.csv;
+open table Locations;
+insert into Locations values from locations.csv;
+open table Participants;
+insert into Participants values from participants.csv;
+select name from Locations join Events into EventLocations where Locations.name = Events.location;
+open table EventLocations;
+select regNo, eventName from Participants join EventLocations where Participants.event = EventLocations.name;
+select regNo, eventName from  
