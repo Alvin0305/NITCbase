@@ -336,10 +336,51 @@ int IndLeaf::getEntry(void *ptr, int indexNum) {
   return SUCCESS;
 }
 
-// ======================= Stage 10 =======================
-// defined just to escape compilation errors. Will be implemented in Stage 11
-int IndInternal::setEntry(void *ptr, int indexNum) { return 0; }
+// =============================== Stage 11 ===============================
+int IndInternal::setEntry(void *ptr, int indexNum) {
+  if (indexNum < 0 or indexNum >= MAX_KEYS_INTERNAL) {
+    return E_OUTOFBOUND;
+  }
 
-// ======================= Stage 10 =======================
-// defined just to escape compilation errors. Will be implemented in Stage 11
-int IndLeaf::setEntry(void *ptr, int indexNum) { return 0; }
+  unsigned char *bufferPtr;
+  int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
+  // typecase the void pointer to internalEntry
+  // bufferPtr refers to the pointer to the block
+  // size of each internalEntry is 20B, so we add indexNum * 20 to bufferPtr + HEADER_SIZE
+  struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+
+  // copy the lChild, attrVal and rChild to the pointer.
+  // size of lChild and rChild are 4 bytes each = sizeof(int32_t).
+  // size of attrVal is ATTRSIZE = 16 bytes
+  memcpy(entryPtr, &(internalEntry->lChild), sizeof(int32_t));
+  memcpy(entryPtr + sizeof(int32_t), &(internalEntry->attrVal), ATTR_SIZE);
+  memcpy(entryPtr + sizeof(int32_t) + ATTR_SIZE, &(internalEntry->rChild), sizeof(int32_t));
+
+  return SUCCESS;
+}
+
+// =============================== Stage 11 ===============================
+int IndLeaf::setEntry(void *ptr, int indexNum) {
+  if (indexNum < 0 or indexNum >= MAX_KEYS_LEAF) {
+    return E_OUTOFBOUND;
+  }
+
+  unsigned char *bufferPtr;
+  int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
+  // convert the ptr to Index
+  // find the position of the entry, i.e., bufferPtr + HEADER_SIZe = indexNum * 32
+  struct Index *index = (struct Index *)ptr;
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + indexNum * LEAF_ENTRY_SIZE;
+
+  memcpy(entryPtr, index, LEAF_ENTRY_SIZE);
+  return SUCCESS;
+}

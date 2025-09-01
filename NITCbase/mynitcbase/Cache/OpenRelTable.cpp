@@ -270,13 +270,19 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE]) {
 
 int OpenRelTable::closeRel(int relId) {
   // relation catalog and attribute catalog won't be allowed to close
-  if (relId == RELCAT_RELID || relId == ATTRCAT_RELID) return E_NOTPERMITTED;
+  if (relId == RELCAT_RELID or relId == ATTRCAT_RELID) {
+    return E_NOTPERMITTED;
+  }
 
   // checks the validity of the relId
-  if (relId < 0 || relId >= MAX_OPEN) return E_OUTOFBOUND;
+  if (relId < 0 or relId >= MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
 
   // checks if the table is opened or not
-  if (AttrCacheTable::attrCache[relId] == nullptr) return E_RELNOTOPEN;
+  if (OpenRelTable::tableMetaInfo[relId].free == true) {  // changed
+    return E_RELNOTOPEN;
+  }
 
   // ======================== Stage 7 ==============================
   // if the relCacheEntry is dirty, set the record (write back)
@@ -290,6 +296,24 @@ int OpenRelTable::closeRel(int relId) {
     int ret = relCatBlock.setRecord(record, recId.slot);
     if (ret != SUCCESS) {
       printf("Failed to set record");
+    }
+  }
+
+  // =============================== Stage 11 ===============================
+  // for each dirty attribute catalog entry in attrCache, write back to disk
+  for (AttrCacheEntry *entry = AttrCacheTable::attrCache[relId]; entry != nullptr; entry = entry->next) {
+    // if the entry is dirty write it back
+    if (entry->dirty == true) {
+      AttrCatEntry dirtyEntry = entry->attrCatEntry;
+      RecId recId = entry->recId;
+
+      // convert the relCatEntry to record for writing back
+      Attribute record[ATTRCAT_NO_ATTRS];
+      AttrCacheTable::attrCatEntryToRecord(&dirtyEntry, record);
+
+      // write back the dirty entries
+      RecBuffer dirtyBlock(recId.block);
+      dirtyBlock.setRecord(record, recId.slot);
     }
   }
 
