@@ -5,12 +5,21 @@
 
 int BPlusTree::numOfComparisons = 0;
 
+// =============================== Stage 11 ===============================
 RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
   IndexId searchIndex;
-  AttrCacheTable::getSearchIndex(relId, attrName, &searchIndex);
+  int ret = AttrCacheTable::getSearchIndex(relId, attrName, &searchIndex);
+  if (ret != SUCCESS) {
+    printf("Search index not available\n");
+    exit(FAILURE);
+  }
 
   AttrCatEntry attrCatEntry;
-  AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+  ret = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+  if (ret != SUCCESS) {
+    printf("Failed to get attr cat entry\n");
+    exit(FAILURE);
+  }
 
   int block = -1, index = -1;
 
@@ -330,7 +339,8 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
       // if the entry.attrVal is smaller than the indexEntry, simply insert it into the indices
       indices[entryIndex] = entry;
     } else {
-      // if we get a value larger than the indexEntry's value, insert the indexEntry and insert the rest of the entries
+      // if we get a value larger than the indexEntry's value, insert the indexEntry and insert the rest of the
+      // entries
       // in the block to the array
       indices[entryIndex] = indexEntry;
       inserted = true;
@@ -350,7 +360,7 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
   }
 
   // check if there is enough space in the leaf for the new entry to be inserted
-  if (header.numEntries != MAX_KEYS_LEAF) {
+  if (header.numEntries < MAX_KEYS_LEAF) {
     // if yes, update the numOfEntries in the header
     header.numEntries++;
     leafBlock.setHeader(&header);
@@ -386,6 +396,7 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
   return SUCCESS;
 }
 
+// =============================== Stage 11 ===============================
 int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]) {
   // get a new block for right rightBlock and get the block of leftBlock
   IndLeaf rightBlock;
@@ -425,7 +436,7 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]) {
   leftBlock.setHeader(&leftBlockHeader);
 
   // insert the first 32 entries in the left block and the next 32 in the right block
-  for (int i = 0; i < newNumEntries; i++) {
+  for (int i = 0; i <= MIDDLE_INDEX_LEAF; i++) {
     leftBlock.setEntry(&indices[i], i);
     rightBlock.setEntry(&indices[i + MIDDLE_INDEX_LEAF + 1], i);
   }
@@ -438,10 +449,10 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
   AttrCatEntry attrCatEntry;
   AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
 
-  IndInternal indBlock(intBlockNum);
+  IndInternal internalBlock(intBlockNum);
 
   HeadInfo header;
-  indBlock.getHeader(&header);
+  internalBlock.getHeader(&header);
 
   InternalEntry internalEntries[header.numEntries + 1];
 
@@ -452,9 +463,9 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
   // when we insert the newInternalNode, update the child pointer
   for (int entry = 0; entry < header.numEntries; entry++) {
     InternalEntry internalEntry;
-    indBlock.getEntry(&internalEntry, entry);
+    internalBlock.getEntry(&internalEntry, entry);
 
-    if (compareAttrs(internalEntry.attrVal, intEntry.attrVal, attrCatEntry.attrType) >= 0) {
+    if (compareAttrs(intEntry.attrVal, internalEntry.attrVal, attrCatEntry.attrType) >= 0) {
       // if the entry.attrVal is smaller than the intEntry, simply insert it into the array
       internalEntries[entryIndex++] = internalEntry;
     } else if (!inserted) {
@@ -477,14 +488,14 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBl
   }
 
   // check if there is enough space in the leaf for the new entry to be inserted
-  if (header.numEntries != MAX_KEYS_INTERNAL) {
+  if (header.numEntries < MAX_KEYS_INTERNAL) {
     // if yes, update the numOfEntries in the header
     header.numEntries++;
-    indBlock.setHeader(&header);
+    internalBlock.setHeader(&header);
 
     // insert all the entries in the array to the block in the order
     for (int entryIndex = 0; entryIndex < header.numEntries; entryIndex++) {
-      indBlock.setEntry(&internalEntries[entryIndex], entryIndex);
+      internalBlock.setEntry(&internalEntries[entryIndex], entryIndex);
     }
 
     return SUCCESS;
@@ -557,7 +568,8 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]) {
 
   int type = StaticBuffer::getStaticBlockType(internalEntries[0].lChild);
 
-  // now we need to update the parent block of the last 50 children of the newly created right block from the left block
+  // now we need to update the parent block of the last 50 children of the newly created right block from the left
+  // block
   // to the right block for that, first we will set the parent of lChild (first child pointer) of the first entry in
   // right block to right block and for the rest, we take the right childs and update its parent as the right block
   BlockBuffer blockBuffer(internalEntries[MIDDLE_INDEX_INTERNAL + 1].lChild);
@@ -568,7 +580,7 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]) {
   blockHeader.pblock = rightBlockNum;
   blockBuffer.setHeader(&blockHeader);
 
-  for (int i = 0; i < newNumEntries; i++) {
+  for (int i = 0; i < MIDDLE_INDEX_INTERNAL; i++) {
     BlockBuffer blockBuffer(internalEntries[i + MIDDLE_INDEX_INTERNAL + 1].rChild);
 
     blockBuffer.getHeader(&blockHeader);
@@ -579,6 +591,7 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]) {
   return rightBlockNum;
 }
 
+// =============================== Stage 11 ===============================
 int BPlusTree::createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild) {
   AttrCatEntry attrCatEntry;
   AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);

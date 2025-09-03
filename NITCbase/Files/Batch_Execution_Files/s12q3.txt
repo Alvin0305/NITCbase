@@ -1,0 +1,17 @@
+create table Events(id NUM, title STR, location STR);
+create table Locations(name STR, capacity NUM);
+create table Participants(regNo NUM, event STR);
+open table Events;
+insert into Events values from events.csv;
+open table Locations;
+insert into Locations values from locations.csv;
+open table Participants;
+insert into Participants values from participants.csv;
+create table Organizers(name STR, eventId NUM);
+open table Organizers;
+insert into Organizers values from organizers.csv;
+select * from Participants join Events into EventPeople where Participants.event = Events.title;
+open table EventPeople;
+open table Organizers;
+select * from Organizers join EventPeople into OrgParticipants where Organizers.eventId = EventPeople.id;
+select * from Organizers into ThomasOrg where name = Thomas;
